@@ -34,6 +34,9 @@ export async function GET() {
     }
 
     const products = (data ?? []).map((row) => {
+        const typeRow = Array.isArray(row.product_types)
+            ? row.product_types[0]
+            : row.product_types;
         const imageUrl = row.image_path
             ? supabaseServer.storage
                   .from("product-images")
@@ -45,8 +48,8 @@ export async function GET() {
             title: row.name,
             price: Number(row.price ?? 0),
             tag: row.tag ?? null,
-            category: row.product_types?.name ?? "Uncategorized",
-            categorySlug: row.product_types?.slug ?? "uncategorized",
+            category: typeRow?.name ?? "Uncategorized",
+            categorySlug: typeRow?.slug ?? "uncategorized",
             description: row.description ?? null,
             imageUrl,
             imageAlt: row.image_alt ?? row.name,
