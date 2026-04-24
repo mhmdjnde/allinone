@@ -1,11 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -38,9 +35,7 @@ export default function ProductsPage() {
     const { addItem } = useCart();
     const { products, isLoading, error } = useProducts();
     const searchParams = useSearchParams();
-    const [searchQuery, setSearchQuery] = useState(
-        searchParams.get("q") ?? ""
-    );
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [filters, setFilters] = useState<Filters>({
         minPrice: "",
@@ -49,9 +44,7 @@ export default function ProductsPage() {
     });
     const [draftFilters, setDraftFilters] = useState<Filters>(filters);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(
-        null
-    );
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
@@ -59,9 +52,7 @@ export default function ProductsPage() {
     }, [searchParams]);
 
     useEffect(() => {
-        if (isFilterOpen) {
-            setDraftFilters(filters);
-        }
+        if (isFilterOpen) setDraftFilters(filters);
     }, [isFilterOpen, filters]);
 
     useEffect(() => {
@@ -77,7 +68,7 @@ export default function ProductsPage() {
 
     const categories = useMemo(() => {
         const unique = new Set<string>();
-        products.forEach((product) => unique.add(product.category));
+        products.forEach((p) => unique.add(p.category));
         return ["All", ...Array.from(unique)];
     }, [products]);
 
@@ -87,271 +78,297 @@ export default function ProductsPage() {
         const max = Number(filters.maxPrice);
 
         let list = products.filter((product) => {
-            if (
-                selectedCategory !== "All" &&
-                product.category !== selectedCategory
-            ) {
-                return false;
-            }
-
-            if (query && !product.title.toLowerCase().includes(query)) {
-                return false;
-            }
-
-            if (filters.minPrice && product.price < min) {
-                return false;
-            }
-
-            if (filters.maxPrice && product.price > max) {
-                return false;
-            }
-
+            if (selectedCategory !== "All" && product.category !== selectedCategory) return false;
+            if (query && !product.title.toLowerCase().includes(query)) return false;
+            if (filters.minPrice && product.price < min) return false;
+            if (filters.maxPrice && product.price > max) return false;
             return true;
         });
 
-        if (filters.sortOrder === "price-asc") {
-            list = [...list].sort((a, b) => a.price - b.price);
-        } else if (filters.sortOrder === "price-desc") {
-            list = [...list].sort((a, b) => b.price - a.price);
-        } else if (filters.sortOrder === "newest") {
-            list = [...list].sort(
-                (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
-            );
-        }
+        if (filters.sortOrder === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
+        else if (filters.sortOrder === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
+        else if (filters.sortOrder === "newest") list = [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         return list;
     }, [filters, searchQuery, selectedCategory, products]);
 
+    const hasActiveFilters = filters.minPrice || filters.maxPrice || filters.sortOrder !== "featured";
+
     return (
-        <div className="space-y-10">
-            <section className="rounded-3xl border bg-gradient-to-br from-card/80 via-background to-muted/20 p-8 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_60px_rgba(0,0,0,0.55)] md:p-10">
-                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-8">
+
+            {/* ── PAGE HEADER ──────────────────────────────────── */}
+            <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-card mt-6 px-7 py-9 md:px-12 md:py-11">
+                <div className="absolute right-0 top-0 w-48 h-48 opacity-[0.025] pointer-events-none">
+                    <svg viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="192" cy="0" r="140" stroke="currentColor" strokeWidth="0.5" />
+                        <circle cx="192" cy="0" r="90" stroke="currentColor" strokeWidth="0.5" />
+                    </svg>
+                </div>
+
+                <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                            Products
+                        <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground/60">
+                            — Catalog
                         </p>
-                        <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-                            Everything in one place.
+                        <h1 className="mt-3 font-serif font-bold italic leading-tight tracking-tight text-foreground"
+                            style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)" }}>
+                            Everything in<br />one place.
                         </h1>
-                        <p className="mt-2 max-w-xl text-sm text-muted-foreground md:text-base">
-                            Curated essentials and small-batch drops for daily
-                            use.
-                        </p>
                     </div>
-                    <div className="w-full max-w-md">
-                        <div className="relative">
-                            <Input
-                                placeholder="Search the catalog"
-                                className="h-11 rounded-2xl bg-muted/50 border-muted/60"
-                                value={searchQuery}
-                                onChange={(event) =>
-                                    setSearchQuery(event.target.value)
-                                }
-                            />
-                        </div>
+                    <div className="w-full max-w-xs shrink-0">
+                        <Input
+                            placeholder="Search the catalog…"
+                            className="h-10 rounded-full bg-muted/50 border-transparent text-sm focus-visible:border-primary/30 focus-visible:ring-1 focus-visible:ring-primary/30"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
                 </div>
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             </section>
 
+            {/* ── FILTERS BAR ──────────────────────────────────── */}
             <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                            <SheetTrigger asChild>
-                                <Button
-                                    variant="secondary"
-                                    className="h-10 rounded-2xl px-4"
-                                >
-                                    <SlidersHorizontal className="mr-2 h-4 w-4" />
-                                    Filters
-                                </Button>
-                            </SheetTrigger>
-                            <SheetContent
-                                side="left"
-                                className="w-[340px] bg-card/95 backdrop-blur-xl p-6 pt-5"
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Filter sheet */}
+                    <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                        <SheetTrigger asChild>
+                            <Button
+                                variant={hasActiveFilters ? "default" : "outline"}
+                                size="sm"
+                                className="h-8 rounded-full px-4 text-xs font-medium border-border/60"
                             >
-                                <SheetHeader className="p-0">
-                                    <SheetTitle>Filters</SheetTitle>
-                                </SheetHeader>
-                                <div className="mt-6 space-y-5">
-                                    <div>
-                                        <p className="text-sm font-semibold text-muted-foreground">
-                                            Price range
-                                        </p>
-                                        <div className="mt-3 flex items-center gap-2">
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                placeholder="Min"
-                                                value={draftFilters.minPrice}
-                                                onChange={(event) =>
-                                                    setDraftFilters({
-                                                        ...draftFilters,
-                                                        minPrice:
-                                                            event.target.value,
-                                                    })
-                                                }
-                                                className="h-10 rounded-2xl bg-muted/50 border-muted/60"
-                                            />
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                placeholder="Max"
-                                                value={draftFilters.maxPrice}
-                                                onChange={(event) =>
-                                                    setDraftFilters({
-                                                        ...draftFilters,
-                                                        maxPrice:
-                                                            event.target.value,
-                                                    })
-                                                }
-                                                className="h-10 rounded-2xl bg-muted/50 border-muted/60"
-                                            />
-                                        </div>
+                                <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+                                Filters
+                                {hasActiveFilters && <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-primary-foreground/70" />}
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="w-[320px] bg-card border-r border-border/80 p-0">
+                            <SheetHeader className="px-6 pt-6 pb-4">
+                                <SheetTitle className="font-serif italic text-base font-bold">Filters</SheetTitle>
+                            </SheetHeader>
+                            <div className="px-6 space-y-6">
+                                <Separator />
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Price range</p>
+                                    <div className="mt-3 flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            placeholder="Min $"
+                                            value={draftFilters.minPrice}
+                                            onChange={(e) => setDraftFilters({ ...draftFilters, minPrice: e.target.value })}
+                                            className="h-9 rounded-xl bg-muted/50 border-border/60 text-sm"
+                                        />
+                                        <span className="text-muted-foreground/40 text-xs">—</span>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            placeholder="Max $"
+                                            value={draftFilters.maxPrice}
+                                            onChange={(e) => setDraftFilters({ ...draftFilters, maxPrice: e.target.value })}
+                                            className="h-9 rounded-xl bg-muted/50 border-border/60 text-sm"
+                                        />
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-muted-foreground">
-                                            Sort order
-                                        </p>
-                                        <select
-                                            value={draftFilters.sortOrder}
-                                            onChange={(event) =>
-                                                setDraftFilters({
-                                                    ...draftFilters,
-                                                    sortOrder:
-                                                        event.target.value,
-                                                })
-                                            }
-                                            className="mt-3 h-10 w-full rounded-2xl border border-muted/60 bg-muted/50 px-3 text-sm text-foreground outline-none focus:border-emerald-400/60"
-                                        >
-                                            {sortOptions.map((option) => (
-                                                <option
-                                                    key={option.value}
-                                                    value={option.value}
-                                                >
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Sort by</p>
+                                    <select
+                                        value={draftFilters.sortOrder}
+                                        onChange={(e) => setDraftFilters({ ...draftFilters, sortOrder: e.target.value })}
+                                        className="mt-3 h-9 w-full rounded-xl border border-border/60 bg-muted/50 px-3 text-sm text-foreground outline-none focus:border-primary/40"
+                                    >
+                                        {sortOptions.map((opt) => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex gap-2 pt-2">
                                     <Button
-                                        className="h-11 w-full rounded-2xl"
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 rounded-full text-xs"
+                                        onClick={() => {
+                                            const reset: Filters = { minPrice: "", maxPrice: "", sortOrder: "featured" };
+                                            setDraftFilters(reset);
+                                            setFilters(reset);
+                                            setIsFilterOpen(false);
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="flex-1 rounded-full text-xs"
                                         onClick={() => {
                                             setFilters(draftFilters);
                                             setIsFilterOpen(false);
                                         }}
                                     >
-                                        Save filters
+                                        Apply
                                     </Button>
                                 </div>
-                            </SheetContent>
-                        </Sheet>
-                        {categories.map((category) => {
-                            const isActive = selectedCategory === category;
-                            return (
-                                <Button
-                                    key={category}
-                                    variant={isActive ? "default" : "secondary"}
-                                    className="h-10 rounded-2xl px-4"
-                                    onClick={() =>
-                                        setSelectedCategory(category)
-                                    }
-                                >
-                                    {category}
-                                </Button>
-                            );
-                        })}
-                    </div>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+
+                    {/* Category pills */}
+                    {categories.map((category) => {
+                        const isActive = selectedCategory === category;
+                        return (
+                            <button
+                                key={category}
+                                onClick={() => setSelectedCategory(category)}
+                                className={`h-8 rounded-full px-4 text-xs font-medium transition-all border ${
+                                    isActive
+                                        ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20"
+                                        : "border-border/60 text-muted-foreground hover:text-foreground hover:border-border bg-transparent"
+                                }`}
+                            >
+                                {category}
+                            </button>
+                        );
+                    })}
                 </div>
-                <Separator />
+
+                {/* Results count */}
+                {!isLoading && (
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                            {filteredProducts.length === 0
+                                ? "No products found"
+                                : `${filteredProducts.length} product${filteredProducts.length !== 1 ? "s" : ""}`}
+                        </p>
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                Clear search ×
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                <Separator className="opacity-40" />
             </div>
 
-            <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* ── PRODUCT GRID ─────────────────────────────────── */}
+            <section>
                 {error ? (
                     <p className="text-sm text-muted-foreground">{error}</p>
                 ) : isLoading ? (
-                    Array.from({ length: 8 }).map((_, index) => (
-                        <Card
-                            key={`loading-${index}`}
-                            className="group rounded-3xl overflow-hidden border bg-muted/20"
-                        >
-                            <div className="relative aspect-[4/5] bg-muted/30 animate-pulse" />
-                            <CardContent className="p-4 space-y-3">
-                                <div className="h-4 w-2/3 rounded bg-muted/30 animate-pulse" />
-                                <div className="h-4 w-1/3 rounded bg-muted/30 animate-pulse" />
-                                <div className="h-10 w-full rounded-2xl bg-muted/30 animate-pulse" />
-                                <div className="h-10 w-full rounded-2xl bg-muted/30 animate-pulse" />
-                            </CardContent>
-                        </Card>
-                    ))
-                ) : (
-                    filteredProducts.map((product) => (
-                        <Card
-                            key={product.id}
-                            className="group rounded-3xl overflow-hidden border bg-muted/20"
-                        >
-                            <div className="relative aspect-[4/5] bg-muted/30 overflow-hidden">
-                                {product.imageUrl ? (
-                                    <img
-                                        src={product.imageUrl}
-                                        alt={
-                                            product.imageAlt ?? product.title
-                                        }
-                                        className="h-full w-full object-cover"
-                                        loading="lazy"
-                                    />
-                                ) : null}
-                                {product.tag ? (
-                                    <div className="absolute left-4 top-4">
-                                        <Badge
-                                            variant="secondary"
-                                            className="rounded-full"
-                                        >
-                                            {product.tag}
-                                        </Badge>
-                                    </div>
-                                ) : null}
-                                <div className="absolute bottom-4 left-4 text-xs text-muted-foreground">
-                                    {product.category}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <div key={`skel-${i}`} className="overflow-hidden rounded-2xl border border-border/50 bg-card">
+                                <div className="aspect-[3/4] animate-pulse bg-muted/40" />
+                                <div className="p-4 space-y-2.5">
+                                    <div className="h-3.5 w-2/3 rounded-full bg-muted/40 animate-pulse" />
+                                    <div className="h-3 w-1/3 rounded-full bg-muted/40 animate-pulse" />
+                                    <div className="mt-3 h-9 w-full rounded-full bg-muted/30 animate-pulse" />
                                 </div>
                             </div>
-                            <CardContent className="p-4">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div>
-                                        <p className="font-medium">
-                                            {product.title}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            ${product.price}
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button
-                                    className="mt-4 w-full rounded-2xl"
-                                    onClick={() => openDetails(product)}
-                                >
-                                    View details
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    className="mt-2 w-full rounded-2xl"
-                                    onClick={() => addItem(product)}
-                                >
-                                    Add to cart
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    ))
+                        ))}
+                    </div>
+                ) : filteredProducts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                        <p className="font-serif italic text-2xl font-bold text-muted-foreground/30">Nothing here.</p>
+                        <p className="text-xs text-muted-foreground/50 mt-2">Try adjusting your filters or search query.</p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-5 rounded-full"
+                            onClick={() => {
+                                setSearchQuery("");
+                                setSelectedCategory("All");
+                                setFilters({ minPrice: "", maxPrice: "", sortOrder: "featured" });
+                            }}
+                        >
+                            Clear all filters
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {filteredProducts.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                onViewDetails={openDetails}
+                                onAddToCart={addItem}
+                            />
+                        ))}
+                    </div>
                 )}
             </section>
+
             <ProductDetailsDialog
                 product={selectedProduct}
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
                 onAddToCart={addItem}
             />
+        </div>
+    );
+}
+
+function ProductCard({
+    product,
+    onViewDetails,
+    onAddToCart,
+}: {
+    product: Product;
+    onViewDetails: (p: Product) => void;
+    onAddToCart: (p: Product) => void;
+}) {
+    return (
+        <div className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card transition-all duration-300 hover:border-border hover:shadow-xl hover:shadow-black/25">
+            {/* Image */}
+            <div className="relative aspect-[3/4] overflow-hidden bg-muted/30">
+                {product.imageUrl && (
+                    <img
+                        src={product.imageUrl}
+                        alt={product.imageAlt ?? product.title}
+                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+                        loading="lazy"
+                    />
+                )}
+                {product.tag && (
+                    <div className="absolute left-3 top-3">
+                        <span className="rounded-full bg-primary px-2.5 py-1 text-[9px] font-bold text-primary-foreground uppercase tracking-wider shadow-sm">
+                            {product.tag}
+                        </span>
+                    </div>
+                )}
+                <div className="absolute bottom-3 right-3">
+                    <span className="rounded-full bg-background/70 backdrop-blur-sm px-2.5 py-1 text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
+                        {product.category}
+                    </span>
+                </div>
+            </div>
+
+            {/* Info */}
+            <div className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium leading-snug line-clamp-2">{product.title}</p>
+                    <span className="text-sm font-bold text-primary tabular-nums whitespace-nowrap shrink-0">${product.price}</span>
+                </div>
+                <div className="mt-3.5 space-y-2">
+                    <Button
+                        className="w-full h-9 rounded-full text-[13px] font-semibold"
+                        onClick={() => onViewDetails(product)}
+                    >
+                        View Details
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        className="w-full h-9 rounded-full text-[13px] border border-border/60 hover:bg-muted/50 hover:border-border"
+                        onClick={() => onAddToCart(product)}
+                    >
+                        Add to Cart
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 }

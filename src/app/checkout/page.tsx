@@ -22,255 +22,224 @@ export default function CheckoutPage() {
     const [address, setAddress] = useState("");
     const [notes, setNotes] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [submitMessage, setSubmitMessage] = useState("");
+    const [submitted, setSubmitted] = useState(false);
 
     const fullPhone = useMemo(() => {
-        if (!phone.trim()) {
-            return countryCode;
-        }
+        if (!phone.trim()) return countryCode;
         return `${countryCode} ${phone.trim()}`;
     }, [countryCode, phone]);
 
     const validate = () => {
         const nextErrors: Record<string, string> = {};
-
-        if (!firstName.trim()) {
-            nextErrors.firstName = "First name is required.";
-        }
-        if (!lastName.trim()) {
-            nextErrors.lastName = "Last name is required.";
-        }
-        if (!phone.trim()) {
-            nextErrors.phone = "Phone number is required.";
-        }
-        if (!address.trim()) {
-            nextErrors.address = "Address is required.";
-        }
-
+        if (!firstName.trim()) nextErrors.firstName = "Required";
+        if (!lastName.trim()) nextErrors.lastName = "Required";
+        if (!phone.trim()) nextErrors.phone = "Required";
+        if (!address.trim()) nextErrors.address = "Required";
         setErrors(nextErrors);
         return nextErrors;
     };
 
     const handleSubmit = () => {
         const nextErrors = validate();
-        if (Object.keys(nextErrors).length > 0) {
-            setSubmitMessage("");
-            return;
-        }
-
-        setSubmitMessage(
-            `Confirmation request sent to WhatsApp on ${fullPhone}.`
-        );
+        if (Object.keys(nextErrors).length > 0) return;
+        setSubmitted(true);
     };
 
-    const isComplete =
-        firstName.trim() &&
-        lastName.trim() &&
-        phone.trim() &&
-        address.trim();
+    const isComplete = firstName.trim() && lastName.trim() && phone.trim() && address.trim();
 
     return (
-        <div className="space-y-10">
-            <section className="rounded-3xl border bg-gradient-to-br from-card/80 via-background to-muted/20 p-8 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_60px_rgba(0,0,0,0.55)] md:p-10 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                    <div>
-                        <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                            Checkout
-                        </p>
-                        <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-                            Confirm your order.
-                        </h1>
-                        <p className="mt-2 max-w-xl text-sm text-muted-foreground md:text-base">
-                            We will send your order details to WhatsApp for
-                            confirmation.
-                        </p>
-                    </div>
-                </div>
+        <div className="space-y-8">
+
+            {/* ── PAGE HEADER ──────────────────────────────────── */}
+            <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-card mt-6 px-7 py-9 md:px-12 md:py-11">
+                <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground/60">
+                    — Final step
+                </p>
+                <h1 className="mt-3 font-serif font-bold italic leading-tight tracking-tight text-foreground"
+                    style={{ fontSize: "clamp(1.8rem, 5vw, 2.8rem)" }}>
+                    Confirm your order.
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground max-w-md">
+                    We&apos;ll send your order details to WhatsApp for confirmation.
+                </p>
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             </section>
 
-            <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-3xl border bg-card/60 p-6 shadow-sm animate-in fade-in slide-in-from-bottom-2">
-                    <h2 className="text-lg font-semibold">Customer details</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        All fields are required unless marked optional.
-                    </p>
-                    <Separator className="my-6" />
+            {/* ── FORM + CONFIRMATION ──────────────────────────── */}
+            <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
 
-                    <form className="space-y-5">
+                {/* Customer details */}
+                <div className="rounded-2xl border border-border/60 bg-card p-6 md:p-7 space-y-6">
+                    <div>
+                        <h2 className="font-serif italic text-lg font-bold">Customer details</h2>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Fields without &ldquo;optional&rdquo; are required.
+                        </p>
+                    </div>
+                    <Separator className="opacity-40" />
+
+                    <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+
+                        {/* Name */}
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                {errors.firstName && (
-                                    <p className="text-xs text-amber-200/90">
-                                        {errors.firstName}
-                                    </p>
-                                )}
-                                <label className="text-xs uppercase tracking-wide text-muted-foreground">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-semibold">
                                     First name
                                 </label>
+                                {errors.firstName && (
+                                    <p className="text-[11px] text-destructive font-medium">{errors.firstName}</p>
+                                )}
                                 <Input
                                     required
                                     placeholder="First name"
-                                    className="mt-2 h-11 rounded-2xl bg-muted/40 border-muted/60"
+                                    className={`h-10 rounded-xl bg-muted/40 text-sm ${errors.firstName ? "border-destructive/50" : "border-border/60"} focus-visible:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/30`}
                                     value={firstName}
-                                    onChange={(event) =>
-                                        setFirstName(event.target.value)
-                                    }
+                                    onChange={(e) => setFirstName(e.target.value)}
                                 />
                             </div>
-                            <div>
-                                {errors.lastName && (
-                                    <p className="text-xs text-amber-200/90">
-                                        {errors.lastName}
-                                    </p>
-                                )}
-                                <label className="text-xs uppercase tracking-wide text-muted-foreground">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-semibold">
                                     Last name
                                 </label>
+                                {errors.lastName && (
+                                    <p className="text-[11px] text-destructive font-medium">{errors.lastName}</p>
+                                )}
                                 <Input
                                     required
                                     placeholder="Last name"
-                                    className="mt-2 h-11 rounded-2xl bg-muted/40 border-muted/60"
+                                    className={`h-10 rounded-xl bg-muted/40 text-sm ${errors.lastName ? "border-destructive/50" : "border-border/60"} focus-visible:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/30`}
                                     value={lastName}
-                                    onChange={(event) =>
-                                        setLastName(event.target.value)
-                                    }
+                                    onChange={(e) => setLastName(e.target.value)}
                                 />
                             </div>
                         </div>
 
+                        {/* Email + Phone */}
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label className="text-xs uppercase tracking-wide text-muted-foreground">
-                                    Email (optional)
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-semibold">
+                                    Email <span className="text-muted-foreground/40">(optional)</span>
                                 </label>
                                 <Input
                                     type="email"
                                     placeholder="you@email.com"
-                                    className="mt-2 h-11 rounded-2xl bg-muted/40 border-muted/60"
+                                    className="h-10 rounded-xl bg-muted/40 border-border/60 text-sm focus-visible:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/30"
                                     value={email}
-                                    onChange={(event) =>
-                                        setEmail(event.target.value)
-                                    }
+                                    onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
-                            <div>
-                                {errors.phone && (
-                                    <p className="text-xs text-amber-200/90">
-                                        {errors.phone}
-                                    </p>
-                                )}
-                                <label className="text-xs uppercase tracking-wide text-muted-foreground">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-semibold">
                                     Phone number
                                 </label>
-                                <div className="mt-2 flex gap-2">
+                                {errors.phone && (
+                                    <p className="text-[11px] text-destructive font-medium">{errors.phone}</p>
+                                )}
+                                <div className="flex gap-2">
                                     <select
-                                        className="h-11 rounded-2xl border border-muted/60 bg-muted/40 px-3 text-sm text-foreground outline-none focus:border-emerald-400/60"
+                                        className="h-10 rounded-xl border border-border/60 bg-muted/40 px-2.5 text-xs text-foreground outline-none focus:border-primary/40 shrink-0"
                                         value={countryCode}
-                                        onChange={(event) =>
-                                            setCountryCode(event.target.value)
-                                        }
+                                        onChange={(e) => setCountryCode(e.target.value)}
                                     >
-                                        {countryCodes.map((option) => (
-                                            <option
-                                                key={option.code}
-                                                value={option.code}
-                                            >
-                                                {option.label} {option.code}
+                                        {countryCodes.map((opt) => (
+                                            <option key={opt.code} value={opt.code}>
+                                                {opt.label} {opt.code}
                                             </option>
                                         ))}
                                     </select>
                                     <Input
                                         required
                                         placeholder="Phone number"
-                                        className="h-11 flex-1 rounded-2xl bg-muted/40 border-muted/60"
+                                        className={`h-10 flex-1 rounded-xl bg-muted/40 text-sm ${errors.phone ? "border-destructive/50" : "border-border/60"} focus-visible:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/30`}
                                         value={phone}
-                                        onChange={(event) =>
-                                            setPhone(event.target.value)
-                                        }
+                                        onChange={(e) => setPhone(e.target.value)}
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            {errors.address && (
-                                <p className="text-xs text-amber-200/90">
-                                    {errors.address}
-                                </p>
-                            )}
-                            <label className="text-xs uppercase tracking-wide text-muted-foreground">
-                                Detailed address
+                        {/* Address */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-semibold">
+                                Delivery address
                             </label>
+                            {errors.address && (
+                                <p className="text-[11px] text-destructive font-medium">{errors.address}</p>
+                            )}
                             <textarea
                                 required
-                                placeholder="Street, building, city, floor, landmark..."
-                                className="mt-2 min-h-[120px] w-full rounded-2xl border border-muted/60 bg-muted/40 p-3 text-sm text-foreground outline-none focus:border-emerald-400/60"
+                                placeholder="Street, building, floor, city, landmark…"
+                                className={`min-h-[110px] w-full rounded-xl border ${errors.address ? "border-destructive/50" : "border-border/60"} bg-muted/40 p-3 text-sm text-foreground outline-none focus:border-primary/40 resize-none transition-colors`}
                                 value={address}
-                                onChange={(event) =>
-                                    setAddress(event.target.value)
-                                }
+                                onChange={(e) => setAddress(e.target.value)}
                             />
                         </div>
 
-                        <div>
-                            <label className="text-xs uppercase tracking-wide text-muted-foreground">
-                                Notes (optional)
+                        {/* Notes */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-semibold">
+                                Notes <span className="text-muted-foreground/40">(optional)</span>
                             </label>
                             <textarea
-                                placeholder="Delivery notes or special requests."
-                                className="mt-2 min-h-[90px] w-full rounded-2xl border border-muted/60 bg-muted/40 p-3 text-sm text-foreground outline-none focus:border-emerald-400/60"
+                                placeholder="Special delivery instructions or requests."
+                                className="min-h-[80px] w-full rounded-xl border border-border/60 bg-muted/40 p-3 text-sm text-foreground outline-none focus:border-primary/40 resize-none transition-colors"
                                 value={notes}
-                                onChange={(event) =>
-                                    setNotes(event.target.value)
-                                }
+                                onChange={(e) => setNotes(e.target.value)}
                             />
                         </div>
                     </form>
                 </div>
 
-                <div className="rounded-3xl border bg-card/60 p-6 shadow-sm animate-in fade-in slide-in-from-bottom-2">
-                    <h2 className="text-lg font-semibold">Confirmation</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        We will send a WhatsApp message to confirm your order.
-                    </p>
-                    <Separator className="my-6" />
+                {/* Confirmation panel */}
+                <div className="rounded-2xl border border-border/60 bg-card p-6 md:p-7 space-y-6">
+                    <div>
+                        <h2 className="font-serif italic text-lg font-bold">Confirmation</h2>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            A WhatsApp message will confirm your order.
+                        </p>
+                    </div>
+                    <Separator className="opacity-40" />
+
                     <div className="space-y-4">
-                        <div className="rounded-2xl border bg-muted/30 p-4">
-                            <p className="text-sm text-muted-foreground">
-                                WhatsApp number
-                            </p>
-                            <p className="mt-1 text-base font-semibold">
-                                {fullPhone}
-                            </p>
+                        {/* Phone preview */}
+                        <div className="rounded-xl border border-border/50 bg-muted/20 p-4">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 font-semibold">WhatsApp number</p>
+                            <p className="mt-1.5 text-base font-bold tabular-nums">{fullPhone}</p>
                         </div>
-                        <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={handleSubmit}
-                            onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                    handleSubmit();
-                                }
-                            }}
-                        >
+
+                        {/* Success state */}
+                        {submitted ? (
+                            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
+                                <div className="h-5 w-5 rounded-full border-2 border-primary flex items-center justify-center shrink-0 mt-0.5">
+                                    <svg viewBox="0 0 10 8" className="h-2.5 w-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M1 4l3 3 5-6" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-primary">Confirmation sent!</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        We&apos;ll reach you on {fullPhone} via WhatsApp shortly.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
                             <Button
-                                className={`h-12 w-full rounded-2xl ${
-                                    !isComplete ? "pointer-events-none" : ""
-                                }`}
+                                className="w-full h-11 rounded-full text-sm font-semibold shadow-lg shadow-primary/20"
                                 disabled={!isComplete}
-                                aria-disabled={!isComplete}
+                                onClick={handleSubmit}
                             >
-                                Send confirmation to WhatsApp on {fullPhone}
+                                Send confirmation to WhatsApp
                             </Button>
-                        </div>
-                        {submitMessage && (
-                            <p className="text-sm text-emerald-200/90">
-                                {submitMessage}
+                        )}
+
+                        {!isComplete && !submitted && (
+                            <p className="text-[11px] text-muted-foreground/60 text-center">
+                                Fill in all required fields to continue.
                             </p>
                         )}
-                        <p className="text-xs text-muted-foreground">
-                            Make sure your phone number is correct before
-                            sending.
+
+                        <p className="text-[11px] text-muted-foreground/50 text-center">
+                            Double-check your phone number before submitting.
                         </p>
                     </div>
                 </div>
