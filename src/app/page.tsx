@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart-provider";
 import type { Product } from "@/lib/products";
 import { useProducts } from "@/lib/use-products";
-import { ProductDetailsDialog } from "@/components/product-details-dialog";
-import { useEffect, useState } from "react";
 
 const MARQUEE_ITEMS = [
     "Free Delivery",
@@ -23,19 +21,6 @@ export default function HomePage() {
     const { addItem } = useCart();
     const { products, isLoading, error } = useProducts();
     const featured = products.slice(0, 4);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-    useEffect(() => {
-        if (!selectedProduct && featured[0]) {
-            setSelectedProduct(featured[0]);
-        }
-    }, [featured, selectedProduct]);
-
-    const openDetails = (product: Product) => {
-        setSelectedProduct(product);
-        setIsDialogOpen(true);
-    };
 
     const marqueeText = MARQUEE_ITEMS.join(" · ") + " · ";
     const marqueeDouble = marqueeText + marqueeText;
@@ -46,12 +31,10 @@ export default function HomePage() {
             {/* ── HERO ─────────────────────────────────────────── */}
             <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-card mt-6">
 
-                {/* Decorative corner label */}
                 <div className="absolute right-6 top-5 text-[10px] tracking-[0.35em] text-muted-foreground/30 uppercase select-none hidden sm:block">
                     Est. 2024
                 </div>
 
-                {/* Decorative geometric accent */}
                 <div className="absolute right-0 top-0 w-64 h-64 opacity-[0.03] pointer-events-none">
                     <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="256" cy="0" r="180" stroke="currentColor" strokeWidth="0.5" />
@@ -62,7 +45,7 @@ export default function HomePage() {
 
                 <div className="relative z-10 px-7 py-10 md:px-14 md:py-16">
                     <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground/60 font-medium">
-                        — AllInOne Market
+                        — One For All Market
                     </p>
 
                     <h1 className="mt-5 font-serif font-bold italic leading-[0.88] tracking-tight text-foreground"
@@ -92,7 +75,6 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                {/* Gold line at bottom */}
                 <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
             </section>
 
@@ -148,7 +130,6 @@ export default function HomePage() {
                                 <ProductCard
                                     key={product.id}
                                     product={product}
-                                    onViewDetails={openDetails}
                                     onAddToCart={addItem}
                                 />
                             ))}
@@ -156,7 +137,6 @@ export default function HomePage() {
                 )}
             </section>
 
-            {/* ── DIVIDER CTA ──────────────────────────────────── */}
             {!isLoading && products.length > 4 && (
                 <div className="flex justify-center pt-8 pb-2">
                     <Link href="/products">
@@ -167,75 +147,69 @@ export default function HomePage() {
                     </Link>
                 </div>
             )}
-
-            <ProductDetailsDialog
-                product={selectedProduct}
-                open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
-                onAddToCart={addItem}
-            />
         </div>
     );
 }
 
 function ProductCard({
     product,
-    onViewDetails,
     onAddToCart,
 }: {
     product: Product;
-    onViewDetails: (p: Product) => void;
     onAddToCart: (p: Product) => void;
 }) {
     return (
         <div className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card transition-all duration-300 hover:border-border hover:shadow-xl hover:shadow-black/20">
-            {/* Image */}
-            <div className="relative aspect-[3/4] overflow-hidden bg-muted/30">
-                {product.imageUrl && (
-                    <img
-                        src={product.imageUrl}
-                        alt={product.imageAlt ?? product.title}
-                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
-                        loading="lazy"
-                    />
-                )}
-                {/* Tag */}
-                {product.tag && (
-                    <div className="absolute left-3 top-3">
-                        <span className="rounded-full bg-primary px-2.5 py-1 text-[9px] font-bold text-primary-foreground uppercase tracking-wider shadow-sm">
-                            {product.tag}
+            <Link href={`/products/${product.slug}`} className="block">
+                <div className="relative aspect-[3/4] overflow-hidden bg-muted/30">
+                    {product.imageUrl && (
+                        <img
+                            src={product.imageUrl}
+                            alt={product.imageAlt ?? product.title}
+                            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+                            loading="lazy"
+                        />
+                    )}
+                    {product.tag && (
+                        <div className="absolute left-3 top-3">
+                            <span className="rounded-full bg-primary px-2.5 py-1 text-[9px] font-bold text-primary-foreground uppercase tracking-wider shadow-sm">
+                                {product.tag}
+                            </span>
+                        </div>
+                    )}
+                    <div className="absolute bottom-3 right-3">
+                        <span className="rounded-full bg-background/70 backdrop-blur-sm px-2.5 py-1 text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
+                            {product.category}
                         </span>
                     </div>
-                )}
-                {/* Category on image */}
-                <div className="absolute bottom-3 right-3">
-                    <span className="rounded-full bg-background/70 backdrop-blur-sm px-2.5 py-1 text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
-                        {product.category}
-                    </span>
                 </div>
-            </div>
-
-            {/* Info */}
-            <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium leading-snug line-clamp-2">{product.title}</p>
-                    <span className="text-sm font-bold text-primary tabular-nums whitespace-nowrap shrink-0">${product.price}</span>
+                <div className="p-4 pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium leading-snug line-clamp-2">{product.title}</p>
+                        <span className="text-sm font-bold text-primary tabular-nums whitespace-nowrap shrink-0">${product.price}</span>
+                    </div>
+                    {product.rating != null && (
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                            <div className="flex">
+                                {[1,2,3,4,5].map((s) => (
+                                    <svg key={s} viewBox="0 0 12 12" className={`h-3 w-3 ${product.rating! >= s - 0.25 ? "text-primary fill-primary" : "text-muted-foreground/20 fill-muted-foreground/20"}`}>
+                                        <path d="M6 1l1.39 2.82L10.5 4.24l-2.25 2.19.53 3.09L6 8l-2.78 1.52.53-3.09L1.5 4.24l3.11-.42z"/>
+                                    </svg>
+                                ))}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground tabular-nums">{product.rating.toFixed(1)}</span>
+                        </div>
+                    )}
                 </div>
-                <div className="mt-3.5 space-y-2">
-                    <Button
-                        className="w-full h-9 rounded-full text-[13px] font-semibold"
-                        onClick={() => onViewDetails(product)}
-                    >
-                        View Details
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        className="w-full h-9 rounded-full text-[13px] border border-border/60 hover:bg-muted/50 hover:border-border"
-                        onClick={() => onAddToCart(product)}
-                    >
-                        Add to Cart
-                    </Button>
-                </div>
+            </Link>
+            <div className="px-4 pb-4 pt-2">
+                <Button
+                    variant="ghost"
+                    className="w-full h-9 rounded-full text-[13px] border border-border/60 hover:bg-muted/50 hover:border-border"
+                    onClick={() => onAddToCart(product)}
+                >
+                    Add to Cart
+                </Button>
             </div>
         </div>
     );

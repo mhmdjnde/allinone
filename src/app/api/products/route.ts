@@ -17,10 +17,14 @@ export async function GET() {
             image_path,
             image_alt,
             created_at,
+            rating,
+            rating_count,
+            highlights,
             product_types (
                 name,
                 slug
-            )
+            ),
+            product_options ( id )
         `
         )
         .eq("is_active", true)
@@ -46,6 +50,7 @@ export async function GET() {
         return {
             id: row.id,
             title: row.name,
+            slug: row.slug,
             price: Number(row.price ?? 0),
             tag: row.tag ?? null,
             category: typeRow?.name ?? "Uncategorized",
@@ -54,6 +59,10 @@ export async function GET() {
             imageUrl,
             imageAlt: row.image_alt ?? row.name,
             createdAt: row.created_at,
+            rating: row.rating != null ? Number(row.rating) : null,
+            ratingCount: row.rating_count ?? null,
+            highlights: row.highlights ?? null,
+            hasOptions: (row.product_options as Array<{ id: string }> ?? []).length > 1,
         };
     });
 

@@ -15,13 +15,13 @@ export function SiteFooter() {
                             <div className="h-6 w-6 overflow-hidden rounded-md opacity-80">
                                 <Image
                                     src="/brand/logo.png"
-                                    alt="AllInOne"
+                                    alt="One For All"
                                     width={24}
                                     height={24}
                                     className="h-full w-full object-contain"
                                 />
                             </div>
-                            <span className="font-serif text-sm font-bold italic tracking-tight">AllInOne</span>
+                            <span className="font-serif text-sm font-bold italic tracking-tight">One For All</span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px]">
                             Curated drops and daily essentials — everything in one place.
@@ -42,7 +42,7 @@ export function SiteFooter() {
                 {/* Bottom bar */}
                 <div className="mt-10 flex flex-col gap-2 md:flex-row md:items-center md:justify-between border-t border-border/40 pt-6">
                     <p className="text-[11px] text-muted-foreground/60">
-                        © {year} AllInOne. All rights reserved.
+                        © {year} One For All. All rights reserved.
                     </p>
                     <p className="text-[11px] text-muted-foreground/40">
                         Studio line 01

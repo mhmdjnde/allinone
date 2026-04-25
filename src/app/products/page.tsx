@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,6 @@ import {
 import { useCart } from "@/components/cart-provider";
 import type { Product } from "@/lib/products";
 import { useProducts } from "@/lib/use-products";
-import { ProductDetailsDialog } from "@/components/product-details-dialog";
 import { SlidersHorizontal } from "lucide-react";
 
 const sortOptions = [
@@ -44,8 +44,6 @@ export default function ProductsPage() {
     });
     const [draftFilters, setDraftFilters] = useState<Filters>(filters);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
         setSearchQuery(searchParams.get("q") ?? "");
@@ -54,17 +52,6 @@ export default function ProductsPage() {
     useEffect(() => {
         if (isFilterOpen) setDraftFilters(filters);
     }, [isFilterOpen, filters]);
-
-    useEffect(() => {
-        if (!selectedProduct && products[0]) {
-            setSelectedProduct(products[0]);
-        }
-    }, [products, selectedProduct]);
-
-    const openDetails = (product: Product) => {
-        setSelectedProduct(product);
-        setIsDialogOpen(true);
-    };
 
     const categories = useMemo(() => {
         const unique = new Set<string>();
@@ -131,7 +118,6 @@ export default function ProductsPage() {
             {/* ── FILTERS BAR ──────────────────────────────────── */}
             <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* Filter sheet */}
                     <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                         <SheetTrigger asChild>
                             <Button
@@ -213,7 +199,6 @@ export default function ProductsPage() {
                         </SheetContent>
                     </Sheet>
 
-                    {/* Category pills */}
                     {categories.map((category) => {
                         const isActive = selectedCategory === category;
                         return (
@@ -232,7 +217,6 @@ export default function ProductsPage() {
                     })}
                 </div>
 
-                {/* Results count */}
                 {!isLoading && (
                     <div className="flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">
@@ -254,7 +238,7 @@ export default function ProductsPage() {
                 <Separator className="opacity-40" />
             </div>
 
-            {/* ── PRODUCT GRID ─────────────────────────────────── */}
+            {/* ── GRID ─────────────────────────────────────────── */}
             <section>
                 {error ? (
                     <p className="text-sm text-muted-foreground">{error}</p>
@@ -291,75 +275,77 @@ export default function ProductsPage() {
                 ) : (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {filteredProducts.map((product) => (
-                            <ProductCard
-                                key={product.id}
-                                product={product}
-                                onViewDetails={openDetails}
-                                onAddToCart={addItem}
-                            />
+                            <ProductCard key={product.id} product={product} onAddToCart={addItem} />
                         ))}
                     </div>
                 )}
             </section>
-
-            <ProductDetailsDialog
-                product={selectedProduct}
-                open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
-                onAddToCart={addItem}
-            />
         </div>
     );
 }
 
 function ProductCard({
     product,
-    onViewDetails,
     onAddToCart,
 }: {
     product: Product;
-    onViewDetails: (p: Product) => void;
     onAddToCart: (p: Product) => void;
 }) {
     return (
         <div className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card transition-all duration-300 hover:border-border hover:shadow-xl hover:shadow-black/25">
-            {/* Image */}
-            <div className="relative aspect-[3/4] overflow-hidden bg-muted/30">
-                {product.imageUrl && (
-                    <img
-                        src={product.imageUrl}
-                        alt={product.imageAlt ?? product.title}
-                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
-                        loading="lazy"
-                    />
-                )}
-                {product.tag && (
-                    <div className="absolute left-3 top-3">
-                        <span className="rounded-full bg-primary px-2.5 py-1 text-[9px] font-bold text-primary-foreground uppercase tracking-wider shadow-sm">
-                            {product.tag}
+            <Link href={`/products/${product.slug}`} className="block">
+                <div className="relative aspect-[3/4] overflow-hidden bg-muted/30">
+                    {product.imageUrl && (
+                        <img
+                            src={product.imageUrl}
+                            alt={product.imageAlt ?? product.title}
+                            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+                            loading="lazy"
+                        />
+                    )}
+                    {product.tag && (
+                        <div className="absolute left-3 top-3">
+                            <span className="rounded-full bg-primary px-2.5 py-1 text-[9px] font-bold text-primary-foreground uppercase tracking-wider shadow-sm">
+                                {product.tag}
+                            </span>
+                        </div>
+                    )}
+                    <div className="absolute bottom-3 right-3">
+                        <span className="rounded-full bg-background/70 backdrop-blur-sm px-2.5 py-1 text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
+                            {product.category}
                         </span>
                     </div>
-                )}
-                <div className="absolute bottom-3 right-3">
-                    <span className="rounded-full bg-background/70 backdrop-blur-sm px-2.5 py-1 text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
-                        {product.category}
-                    </span>
                 </div>
-            </div>
-
-            {/* Info */}
-            <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium leading-snug line-clamp-2">{product.title}</p>
-                    <span className="text-sm font-bold text-primary tabular-nums whitespace-nowrap shrink-0">${product.price}</span>
+                <div className="p-4 pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium leading-snug line-clamp-2">{product.title}</p>
+                        <span className="text-sm font-bold text-primary tabular-nums whitespace-nowrap shrink-0">${product.price}</span>
+                    </div>
+                    {product.rating != null && (
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                            <div className="flex">
+                                {[1,2,3,4,5].map((s) => (
+                                    <svg key={s} viewBox="0 0 12 12" className={`h-3 w-3 ${product.rating! >= s - 0.25 ? "text-primary fill-primary" : "text-muted-foreground/20 fill-muted-foreground/20"}`}>
+                                        <path d="M6 1l1.39 2.82L10.5 4.24l-2.25 2.19.53 3.09L6 8l-2.78 1.52.53-3.09L1.5 4.24l3.11-.42z"/>
+                                    </svg>
+                                ))}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground tabular-nums">{product.rating.toFixed(1)}</span>
+                        </div>
+                    )}
                 </div>
-                <div className="mt-3.5 space-y-2">
-                    <Button
-                        className="w-full h-9 rounded-full text-[13px] font-semibold"
-                        onClick={() => onViewDetails(product)}
-                    >
-                        View Details
-                    </Button>
+            </Link>
+            <div className="px-4 pb-4 pt-2">
+                {product.hasOptions ? (
+                    <Link href={`/products/${product.slug}`} tabIndex={-1}>
+                        <Button
+                            variant="ghost"
+                            className="w-full h-9 rounded-full text-[13px] border border-primary/40 text-primary hover:bg-primary/5 hover:border-primary/60"
+                        >
+                            View Details
+                        </Button>
+                    </Link>
+                ) : (
                     <Button
                         variant="ghost"
                         className="w-full h-9 rounded-full text-[13px] border border-border/60 hover:bg-muted/50 hover:border-border"
@@ -367,7 +353,7 @@ function ProductCard({
                     >
                         Add to Cart
                     </Button>
-                </div>
+                )}
             </div>
         </div>
     );

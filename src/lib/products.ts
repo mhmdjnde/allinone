@@ -1,6 +1,7 @@
 export type Product = {
     id: string;
     title: string;
+    slug: string;
     price: number;
     tag: string | null;
     category: string;
@@ -9,6 +10,10 @@ export type Product = {
     imageUrl: string;
     imageAlt: string | null;
     createdAt: string;
+    rating: number | null;
+    ratingCount: number | null;
+    highlights: string[] | null;
+    hasOptions?: boolean;
 };
 
 export async function fetchProducts(): Promise<Product[]> {

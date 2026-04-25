@@ -1,16 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/components/cart-provider";
-import type { Product } from "@/lib/products";
 import { useProducts } from "@/lib/use-products";
-import { ProductDetailsDialog } from "@/components/product-details-dialog";
 import {
     Sheet,
     SheetContent,
@@ -29,8 +26,7 @@ import {
 } from "lucide-react";
 
 export function SiteHeader() {
-    const { items, totalCount, subtotal, addItem, updateQuantity, removeItem } =
-        useCart();
+    const { items, totalCount, subtotal, addItem, updateQuantity, removeItem } = useCart();
     const { products } = useProducts();
     const shippingFee = 3.99;
     const total = subtotal + shippingFee;
@@ -39,8 +35,6 @@ export function SiteHeader() {
     const isCheckoutPage = pathname === "/checkout";
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const searchRef = useRef<HTMLDivElement | null>(null);
     const mobileSearchRef = useRef<HTMLDivElement | null>(null);
@@ -54,17 +48,6 @@ export function SiteHeader() {
     }, [searchQuery, products]);
 
     useEffect(() => {
-        if (!selectedProduct && products[0]) {
-            setSelectedProduct(products[0]);
-        }
-    }, [products, selectedProduct]);
-
-    const openDetails = (product: Product) => {
-        setSelectedProduct(product);
-        setIsDialogOpen(true);
-    };
-
-    useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
             if (!(event.target instanceof Node)) return;
             const hitDesktop = searchRef.current?.contains(event.target) ?? false;
@@ -75,6 +58,11 @@ export function SiteHeader() {
         return () => document.removeEventListener("mousedown", handleOutsideClick);
     }, []);
 
+    const closeSearch = () => {
+        setIsSearchOpen(false);
+        setSearchQuery("");
+    };
+
     return (
         <header className="sticky top-0 z-50">
             <div className="border-b border-border/80 bg-background/70 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/50">
@@ -83,18 +71,17 @@ export function SiteHeader() {
 
                         {/* Logo */}
                         <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-                            <div className="relative h-7 w-7 overflow-hidden rounded-md opacity-90 group-hover:opacity-100 transition-opacity">
-                                <Image
-                                    src="/brand/logo.png"
-                                    alt="AllInOne"
-                                    width={28}
-                                    height={28}
-                                    className="h-full w-full object-contain"
-                                    priority
-                                />
+                            <div className="opacity-90 group-hover:opacity-100 transition-opacity">
+                                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                                    <rect x="2" y="2" width="24" height="24" rx="7" className="fill-primary/15" />
+                                    <path
+                                        d="M14 5L16.5 11.5L23 14L16.5 16.5L14 23L11.5 16.5L5 14L11.5 11.5Z"
+                                        className="fill-primary"
+                                    />
+                                </svg>
                             </div>
                             <span className="font-serif text-base font-bold italic tracking-tight leading-none">
-                                AllInOne
+                                One For All
                             </span>
                         </Link>
 
@@ -111,6 +98,7 @@ export function SiteHeader() {
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter" && searchQuery.trim()) {
                                             router.push(`/products?q=${encodeURIComponent(searchQuery)}`);
+                                            closeSearch();
                                         }
                                     }}
                                 />
@@ -119,37 +107,28 @@ export function SiteHeader() {
                                     <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/40">
                                         <div className="p-1.5 space-y-0.5">
                                             {searchResults.map((product) => (
-                                                <button
+                                                <Link
                                                     key={product.id}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        openDetails(product);
-                                                        setIsSearchOpen(false);
-                                                        setSearchQuery("");
-                                                    }}
-                                                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                                                    href={`/products/${product.slug}`}
+                                                    onClick={closeSearch}
+                                                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/50 transition-colors"
                                                 >
                                                     <div className="h-9 w-9 flex-none overflow-hidden rounded-lg bg-muted">
                                                         {product.imageUrl && (
-                                                            <img
-                                                                src={product.imageUrl}
-                                                                alt={product.imageAlt ?? product.title}
-                                                                className="h-full w-full object-cover"
-                                                                loading="lazy"
-                                                            />
+                                                            <img src={product.imageUrl} alt={product.imageAlt ?? product.title} className="h-full w-full object-cover" loading="lazy" />
                                                         )}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <p className="text-sm font-medium leading-tight truncate">{product.title}</p>
                                                         <p className="text-xs text-primary font-medium mt-0.5">${product.price}</p>
                                                     </div>
-                                                </button>
+                                                </Link>
                                             ))}
                                         </div>
                                         <div className="border-t border-border/60">
                                             <Link
                                                 href={`/products?q=${encodeURIComponent(searchQuery)}`}
-                                                onClick={() => setIsSearchOpen(false)}
+                                                onClick={closeSearch}
                                                 className="flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                                             >
                                                 All results for &ldquo;{searchQuery}&rdquo;
@@ -183,7 +162,7 @@ export function SiteHeader() {
                                 </SheetTrigger>
                                 <SheetContent side="left" className="w-[300px] bg-card border-r border-border/80 p-0">
                                     <SheetHeader className="px-6 pt-6 pb-4">
-                                        <SheetTitle className="font-serif italic text-base font-bold">AllInOne</SheetTitle>
+                                        <SheetTitle className="font-serif italic text-base font-bold">One For All</SheetTitle>
                                     </SheetHeader>
                                     <div className="px-6 space-y-4">
                                         <div className="relative" ref={mobileSearchRef}>
@@ -197,6 +176,7 @@ export function SiteHeader() {
                                                 onKeyDown={(e) => {
                                                     if (e.key === "Enter" && searchQuery.trim()) {
                                                         router.push(`/products?q=${encodeURIComponent(searchQuery)}`);
+                                                        closeSearch();
                                                     }
                                                 }}
                                             />
@@ -204,15 +184,11 @@ export function SiteHeader() {
                                                 <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
                                                     <div className="p-1.5 space-y-0.5">
                                                         {searchResults.map((product) => (
-                                                            <button
+                                                            <Link
                                                                 key={product.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    openDetails(product);
-                                                                    setIsSearchOpen(false);
-                                                                    setSearchQuery("");
-                                                                }}
-                                                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-muted/50 transition-colors"
+                                                                href={`/products/${product.slug}`}
+                                                                onClick={closeSearch}
+                                                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted/50 transition-colors"
                                                             >
                                                                 <div className="h-8 w-8 flex-none overflow-hidden rounded-lg bg-muted">
                                                                     {product.imageUrl && (
@@ -220,7 +196,7 @@ export function SiteHeader() {
                                                                     )}
                                                                 </div>
                                                                 <span className="text-sm font-medium truncate">{product.title}</span>
-                                                            </button>
+                                                            </Link>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -285,22 +261,24 @@ export function SiteHeader() {
                                                 ) : (
                                                     <div className="space-y-5">
                                                         {items.map((item) => (
-                                                            <div key={item.id} className="flex gap-3.5">
+                                                            <div key={item.cartKey} className="flex gap-3.5">
                                                                 <div className="h-[72px] w-[72px] flex-none overflow-hidden rounded-xl bg-muted">
                                                                     {item.imageUrl && (
-                                                                        <img
-                                                                            src={item.imageUrl}
-                                                                            alt={item.imageAlt ?? item.title}
-                                                                            className="h-full w-full object-cover"
-                                                                            loading="lazy"
-                                                                        />
+                                                                        <img src={item.imageUrl} alt={item.imageAlt ?? item.title} className="h-full w-full object-cover" loading="lazy" />
                                                                     )}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-start justify-between gap-2">
-                                                                        <p className="text-sm font-medium leading-snug line-clamp-2">{item.title}</p>
+                                                                        <div className="min-w-0">
+                                                                            <p className="text-sm font-medium leading-snug line-clamp-2">{item.title}</p>
+                                                                            {item.selectedOption && (
+                                                                                <span className="inline-block mt-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                                                                                    {item.selectedOption.name}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                         <button
-                                                                            onClick={() => removeItem(item.id)}
+                                                                            onClick={() => removeItem(item.cartKey)}
                                                                             className="shrink-0 text-muted-foreground hover:text-foreground transition-colors mt-0.5"
                                                                             aria-label="Remove item"
                                                                         >
@@ -310,7 +288,7 @@ export function SiteHeader() {
                                                                     <p className="text-xs text-primary font-semibold mt-0.5 tabular-nums">${(item.price * item.quantity).toFixed(2)}</p>
                                                                     <div className="mt-2 flex items-center gap-2">
                                                                         <button
-                                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                                            onClick={() => updateQuantity(item.cartKey, item.quantity - 1)}
                                                                             className="h-6 w-6 rounded-full border border-border/80 flex items-center justify-center hover:border-primary/50 transition-colors"
                                                                             aria-label="Decrease quantity"
                                                                         >
@@ -318,7 +296,7 @@ export function SiteHeader() {
                                                                         </button>
                                                                         <span className="text-xs font-semibold w-5 text-center tabular-nums">{item.quantity}</span>
                                                                         <button
-                                                                            onClick={() => addItem(item)}
+                                                                            onClick={() => updateQuantity(item.cartKey, item.quantity + 1)}
                                                                             className="h-6 w-6 rounded-full border border-border/80 flex items-center justify-center hover:border-primary/50 transition-colors"
                                                                             aria-label="Increase quantity"
                                                                         >
@@ -385,6 +363,7 @@ export function SiteHeader() {
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter" && searchQuery.trim()) {
                                         router.push(`/products?q=${encodeURIComponent(searchQuery)}`);
+                                        closeSearch();
                                     }
                                 }}
                             />
@@ -392,15 +371,11 @@ export function SiteHeader() {
                                 <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/40">
                                     <div className="p-1.5 space-y-0.5">
                                         {searchResults.map((product) => (
-                                            <button
+                                            <Link
                                                 key={product.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    openDetails(product);
-                                                    setIsSearchOpen(false);
-                                                    setSearchQuery("");
-                                                }}
-                                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                                                href={`/products/${product.slug}`}
+                                                onClick={closeSearch}
+                                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/50 transition-colors"
                                             >
                                                 <div className="h-9 w-9 flex-none overflow-hidden rounded-lg bg-muted">
                                                     {product.imageUrl && (
@@ -411,13 +386,13 @@ export function SiteHeader() {
                                                     <p className="text-sm font-medium leading-tight truncate">{product.title}</p>
                                                     <p className="text-xs text-primary font-medium mt-0.5">${product.price}</p>
                                                 </div>
-                                            </button>
+                                            </Link>
                                         ))}
                                     </div>
                                     <div className="border-t border-border/60">
                                         <Link
                                             href={`/products?q=${encodeURIComponent(searchQuery)}`}
-                                            onClick={() => setIsSearchOpen(false)}
+                                            onClick={closeSearch}
                                             className="flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                                         >
                                             All results for &ldquo;{searchQuery}&rdquo;
@@ -430,13 +405,6 @@ export function SiteHeader() {
                     </div>
                 </div>
             </div>
-
-            <ProductDetailsDialog
-                product={selectedProduct}
-                open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
-                onAddToCart={addItem}
-            />
         </header>
     );
 }

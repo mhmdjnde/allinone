@@ -21,7 +21,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-    title: "AllInOne — Curated Essentials",
+    title: "One For All — Curated Essentials",
     description: "Curated drops and daily essentials in one place.",
 };
 
